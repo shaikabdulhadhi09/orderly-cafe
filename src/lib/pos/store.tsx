@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import type { MenuItem } from "./menu";
+import { DEFAULT_MENU, type MenuItem } from "./menu";
 
 export type CartLine = { item: MenuItem; quantity: number };
 
@@ -17,6 +17,7 @@ export type Order = {
 type Ctx = {
   cart: CartLine[];
   orders: Order[];
+  menu: MenuItem[];
   total: number;
   profit: number;
   itemCount: number;
@@ -26,6 +27,9 @@ type Ctx = {
   remove: (id: string) => void;
   clear: () => void;
   placeOrder: (o: Omit<Order, "id" | "createdAt" | "items" | "totalAmount" | "profit">) => Order;
+  addMenuItem: (data: Omit<MenuItem, "id">) => MenuItem;
+  updateMenuItem: (id: string, data: Omit<MenuItem, "id">) => void;
+  deleteMenuItem: (id: string) => void;
 };
 
 const PosCtx = createContext<Ctx | null>(null);
@@ -33,6 +37,7 @@ const PosCtx = createContext<Ctx | null>(null);
 export function PosProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [menu, setMenu] = useState<MenuItem[]>(DEFAULT_MENU);
 
   const addItem = useCallback((item: MenuItem) => {
     setCart((c) => {
@@ -60,6 +65,24 @@ export function PosProvider({ children }: { children: ReactNode }) {
 
   const clear = useCallback(() => setCart([]), []);
 
+  const addMenuItem = useCallback<Ctx["addMenuItem"]>((data) => {
+    const item: MenuItem = { ...data, id: `m-${Date.now().toString(36)}` };
+    setMenu((m) => [item, ...m]);
+    return item;
+  }, []);
+
+  const updateMenuItem = useCallback<Ctx["updateMenuItem"]>((id, data) => {
+    setMenu((m) => m.map((it) => (it.id === id ? { ...it, ...data } : it)));
+    setCart((c) =>
+      c.map((l) => (l.item.id === id ? { ...l, item: { ...l.item, ...data } } : l)),
+    );
+  }, []);
+
+  const deleteMenuItem = useCallback<Ctx["deleteMenuItem"]>((id) => {
+    setMenu((m) => m.filter((it) => it.id !== id));
+    setCart((c) => c.filter((l) => l.item.id !== id));
+  }, []);
+
   const total = useMemo(() => cart.reduce((s, l) => s + l.item.price * l.quantity, 0), [cart]);
   const profit = useMemo(
     () => cart.reduce((s, l) => s + (l.item.price - l.item.costPrice) * l.quantity, 0),
@@ -84,7 +107,23 @@ export function PosProvider({ children }: { children: ReactNode }) {
     [cart, total, profit],
   );
 
-  const value: Ctx = { cart, orders, total, profit, itemCount, addItem, increment, decrement, remove, clear, placeOrder };
+  const value: Ctx = {
+    cart,
+    orders,
+    menu,
+    total,
+    profit,
+    itemCount,
+    addItem,
+    increment,
+    decrement,
+    remove,
+    clear,
+    placeOrder,
+    addMenuItem,
+    updateMenuItem,
+    deleteMenuItem,
+  };
   return <PosCtx.Provider value={value}>{children}</PosCtx.Provider>;
 }
 
