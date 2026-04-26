@@ -109,3 +109,53 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ===== Print: only the receipt is shown on paper ===== */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 4mm;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #print-receipt,
+  #print-receipt * {
+    visibility: visible !important;
+  }
+
+  #print-receipt {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 72mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #000 !important;
+    background: #fff !important;
+    font-family: "Courier New", ui-monospace, monospace !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    box-shadow: none !important;
+  }
+
+  #print-receipt * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-color: #000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

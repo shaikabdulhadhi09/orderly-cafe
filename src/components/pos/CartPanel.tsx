@@ -1,9 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Banknote, Check, Minus, Plus, Receipt, Smartphone, Trash2, X } from "lucide-react";
+import {
+  Banknote,
+  Check,
+  Minus,
+  Plus,
+  Printer,
+  Receipt,
+  Smartphone,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { formatMoney, PLACEHOLDER_IMAGE } from "@/lib/pos/menu";
-import { usePos } from "@/lib/pos/store";
+import { usePos, type Order } from "@/lib/pos/store";
+import { Receipt as PrintReceipt } from "./Receipt";
 
 type Payment = "cash" | "upi";
 type CashMode = "exact" | "manual";
@@ -15,6 +26,8 @@ export function CartPanel() {
   const [cashMode, setCashMode] = useState<CashMode>("exact");
   const [manualCashStr, setManualCashStr] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const printingRef = useRef(false);
 
   // Reset payment-state when cart empties
   useEffect(() => {
@@ -46,10 +59,26 @@ export function CartPanel() {
     });
     setSubmitting(false);
     setManualCashStr("");
+    setLastOrder(order);
     toast.success(`Order ${order.id} confirmed`, {
       description: `${formatMoney(order.totalAmount)} • ${order.paymentMethod === "cash" ? "Cash" : "UPI / Online"}`,
     });
   };
+
+  const handlePrint = useCallback(() => {
+    if (!lastOrder || printingRef.current) return;
+    printingRef.current = true;
+    // Defer so the receipt definitely exists in the DOM, then release the lock
+    // after the print dialog closes (resolves on focus return).
+    requestAnimationFrame(() => {
+      window.print();
+      const release = () => {
+        printingRef.current = false;
+        window.removeEventListener("focus", release);
+      };
+      window.addEventListener("focus", release, { once: true });
+    });
+  }, [lastOrder]);
 
   return (
     <aside
@@ -252,7 +281,28 @@ export function CartPanel() {
             </>
           )}
         </button>
+
+        <AnimatePresence initial={false}>
+          {lastOrder && (
+            <motion.button
+              key="print"
+              type="button"
+              onClick={handlePrint}
+              initial={{ opacity: 0, y: -4, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto", marginTop: 8 }}
+              exit={{ opacity: 0, y: -4, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+              className="flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-border bg-surface text-sm font-semibold text-foreground shadow-[var(--shadow-soft-sm)] transition-colors hover:bg-surface-alt"
+            >
+              <Printer className="h-4 w-4" />
+              Print Bill — {lastOrder.id}
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
+
+      {/* Hidden on screen; revealed by @media print rules in styles.css */}
+      <PrintReceipt order={lastOrder} />
     </aside>
   );
 }
