@@ -20,13 +20,25 @@ type Payment = "cash" | "upi";
 type CashMode = "exact" | "manual";
 
 export function CartPanel() {
-  const { cart, total, profit, itemCount, increment, decrement, remove, clear, placeOrder } = usePos();
+  const {
+    cart,
+    total,
+    profit,
+    itemCount,
+    increment,
+    decrement,
+    remove,
+    clear,
+    buildTempOrder,
+    commitOrder,
+  } = usePos();
 
   const [payment, setPayment] = useState<Payment>("cash");
   const [cashMode, setCashMode] = useState<CashMode>("exact");
   const [manualCashStr, setManualCashStr] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  const [tempOrder, setTempOrder] = useState<Order | null>(null);
+  const [printed, setPrinted] = useState(false);
   const printingRef = useRef(false);
 
   // Reset payment-state when cart empties
@@ -52,33 +64,45 @@ export function CartPanel() {
     if (!canSubmit) return;
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 450));
-    const order = placeOrder({
+    // Step 1: Build a temporary order — DO NOT save yet.
+    const order = buildTempOrder({
       paymentMethod: payment,
       cashReceived: payment === "cash" ? cashReceived : undefined,
       change: payment === "cash" ? change : undefined,
     });
     setSubmitting(false);
-    setManualCashStr("");
-    setLastOrder(order);
-    toast.success(`Order ${order.id} confirmed`, {
-      description: `${formatMoney(order.totalAmount)} • ${order.paymentMethod === "cash" ? "Cash" : "UPI / Online"}`,
+    setTempOrder(order);
+    setPrinted(false);
+    toast.success(`Bill ${order.id} ready`, {
+      description: `Click Print Bill to finalize and save the order.`,
     });
   };
 
   const handlePrint = useCallback(() => {
-    if (!lastOrder || printingRef.current) return;
+    if (!tempOrder || printingRef.current || printed) return;
     printingRef.current = true;
-    // Defer so the receipt definitely exists in the DOM, then release the lock
-    // after the print dialog closes (resolves on focus return).
+    setPrinted(true);
+    // Defer so the receipt definitely exists in the DOM.
     requestAnimationFrame(() => {
       window.print();
+      // Step 3: Immediately AFTER triggering print, persist the order.
+      // Browsers cannot reliably detect actual print success, so we save now.
+      commitOrder(tempOrder);
+      setManualCashStr("");
+      toast.success(`Order ${tempOrder.id} saved`, {
+        description: `${formatMoney(tempOrder.totalAmount)} • ${
+          tempOrder.paymentMethod === "cash" ? "Cash" : "UPI / Online"
+        }`,
+      });
+      // Clear the temp order shortly after so the print button hides.
+      setTimeout(() => setTempOrder(null), 600);
       const release = () => {
         printingRef.current = false;
         window.removeEventListener("focus", release);
       };
       window.addEventListener("focus", release, { once: true });
     });
-  }, [lastOrder]);
+  }, [tempOrder, printed, commitOrder]);
 
   return (
     <aside
@@ -283,26 +307,27 @@ export function CartPanel() {
         </button>
 
         <AnimatePresence initial={false}>
-          {lastOrder && (
+          {tempOrder && (
             <motion.button
               key="print"
               type="button"
               onClick={handlePrint}
+              disabled={printed}
               initial={{ opacity: 0, y: -4, height: 0, marginTop: 0 }}
               animate={{ opacity: 1, y: 0, height: "auto", marginTop: 8 }}
               exit={{ opacity: 0, y: -4, height: 0, marginTop: 0 }}
               transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
-              className="flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-border bg-surface text-sm font-semibold text-foreground shadow-[var(--shadow-soft-sm)] transition-colors hover:bg-surface-alt"
+              className="flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-border bg-surface text-sm font-semibold text-foreground shadow-[var(--shadow-soft-sm)] transition-colors hover:bg-surface-alt disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Printer className="h-4 w-4" />
-              Print Bill — {lastOrder.id}
+              {printed ? "Printing…" : `Print Bill — ${tempOrder.id}`}
             </motion.button>
           )}
         </AnimatePresence>
       </div>
 
       {/* Hidden on screen; revealed by @media print rules in styles.css */}
-      <PrintReceipt order={lastOrder} />
+      <PrintReceipt order={tempOrder} />
     </aside>
   );
 }
