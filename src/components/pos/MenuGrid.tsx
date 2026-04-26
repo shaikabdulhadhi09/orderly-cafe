@@ -5,7 +5,9 @@ import { formatMoney, PLACEHOLDER_IMAGE } from "@/lib/pos/menu";
 import { usePos } from "@/lib/pos/store";
 
 export function MenuGrid() {
-  const { addItem, menu } = usePos();
+  const pos = usePos();
+  const { addItem } = pos;
+  const menu = pos.menu ?? [];
   const [cat, setCat] = useState<string>("All");
   const [q, setQ] = useState("");
 
