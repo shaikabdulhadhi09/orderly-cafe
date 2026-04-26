@@ -1,26 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Sidebar } from "@/components/pos/Sidebar";
+import { MenuGrid } from "@/components/pos/MenuGrid";
+import { CartPanel } from "@/components/pos/CartPanel";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: PosPage,
+  head: () => ({
+    meta: [
+      { title: "Crave POS — Take Orders" },
+      { name: "description", content: "Lightning-fast order entry with cash, UPI and instant change calculation." },
+    ],
+  }),
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
+function PosPage() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex h-screen w-screen overflow-hidden bg-background">
+      <Sidebar />
+      <main className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden">
+          <MenuGrid />
+        </div>
+        <CartPanel />
+      </main>
     </div>
   );
-}
-
-function Index() {
-  return <PlaceholderIndex />;
 }
