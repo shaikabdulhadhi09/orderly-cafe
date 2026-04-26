@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Banknote, Check, Minus, Plus, Receipt, Smartphone, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { formatMoney } from "@/lib/pos/menu";
+import { formatMoney, PLACEHOLDER_IMAGE } from "@/lib/pos/menu";
 import { usePos } from "@/lib/pos/store";
 
 type Payment = "cash" | "upi";
@@ -97,7 +97,7 @@ export function CartPanel() {
                   className="flex items-center gap-3 rounded-xl bg-surface-alt p-3"
                 >
                   <img
-                    src={line.item.image}
+                    src={line.item.image || PLACEHOLDER_IMAGE}
                     alt={line.item.name}
                     className="h-12 w-12 flex-shrink-0 rounded-lg object-cover ring-1 ring-border"
                   />
