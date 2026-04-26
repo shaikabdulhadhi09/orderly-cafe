@@ -1,8 +1,9 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutGrid, BarChart3, UtensilsCrossed } from "lucide-react";
+import { LayoutGrid, BarChart3, UtensilsCrossed, BookOpen } from "lucide-react";
 
 const navItems = [
   { to: "/", icon: LayoutGrid, label: "POS" },
+  { to: "/menu", icon: BookOpen, label: "Menu" },
   { to: "/reports", icon: BarChart3, label: "Reports" },
 ] as const;
 

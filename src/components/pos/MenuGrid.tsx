@@ -1,19 +1,25 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
-import { CATEGORIES, formatMoney, MENU, type Category } from "@/lib/pos/menu";
+import { formatMoney, PLACEHOLDER_IMAGE } from "@/lib/pos/menu";
 import { usePos } from "@/lib/pos/store";
 
 export function MenuGrid() {
-  const { addItem } = usePos();
-  const [cat, setCat] = useState<Category>("All");
+  const { addItem, menu } = usePos();
+  const [cat, setCat] = useState<string>("All");
   const [q, setQ] = useState("");
 
+  const categories = useMemo<string[]>(() => {
+    const set = new Set<string>();
+    menu.forEach((m) => m.category && set.add(m.category));
+    return ["All", ...Array.from(set)];
+  }, [menu]);
+
   const items = useMemo(() => {
-    return MENU.filter((m) => (cat === "All" ? true : m.category === cat)).filter((m) =>
-      m.name.toLowerCase().includes(q.toLowerCase()),
-    );
-  }, [cat, q]);
+    return menu
+      .filter((m) => (cat === "All" ? true : m.category === cat))
+      .filter((m) => m.name.toLowerCase().includes(q.toLowerCase()));
+  }, [menu, cat, q]);
 
   return (
     <section className="flex h-full flex-col gap-6 overflow-hidden p-6">
@@ -36,7 +42,7 @@ export function MenuGrid() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((c) => {
+          {categories.map((c) => {
             const active = c === cat;
             return (
               <button
@@ -70,7 +76,7 @@ export function MenuGrid() {
               >
                 <div className="aspect-[5/4] w-full overflow-hidden bg-surface-alt">
                   <img
-                    src={m.image}
+                    src={m.image || PLACEHOLDER_IMAGE}
                     alt={m.name}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-300 ease-[var(--ease-settle)] group-hover:scale-105"
@@ -91,9 +97,15 @@ export function MenuGrid() {
             </motion.li>
           ))}
         </ul>
-        {items.length === 0 && (
+        {items.length === 0 && menu.length > 0 && (
           <div className="flex h-48 items-center justify-center text-text-secondary">
             No items match your search.
+          </div>
+        )}
+        {menu.length === 0 && (
+          <div className="flex h-48 flex-col items-center justify-center gap-1 text-center text-text-secondary">
+            <p className="text-sm font-semibold text-foreground">No menu items yet</p>
+            <p className="text-xs">Add products from the Menu tab to start selling.</p>
           </div>
         )}
       </div>
