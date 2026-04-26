@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { CircleDollarSign, Receipt, TrendingUp, Wallet } from "lucide-react";
+import { CircleDollarSign, Receipt, Smartphone, TrendingUp, Wallet } from "lucide-react";
 import { Sidebar } from "@/components/pos/Sidebar";
 import { formatMoney } from "@/lib/pos/menu";
 import { usePos } from "@/lib/pos/store";
@@ -19,13 +19,30 @@ function ReportsPage() {
   const { orders } = usePos();
   const totalSales = orders.reduce((s, o) => s + o.totalAmount, 0);
   const totalProfit = orders.reduce((s, o) => s + o.profit, 0);
+  const totalOrders = orders.length;
   const cashOrders = orders.filter((o) => o.paymentMethod === "cash").length;
+  const upiOrders = orders.filter((o) => o.paymentMethod === "upi").length;
+  const cashPct = totalOrders > 0 ? Math.round((cashOrders / totalOrders) * 100) : 0;
+  const upiPct = totalOrders > 0 ? Math.round((upiOrders / totalOrders) * 100) : 0;
 
   const stats = [
     { label: "Total Sales", value: formatMoney(totalSales), icon: CircleDollarSign, tint: "primary" as const },
     { label: "Total Profit", value: formatMoney(totalProfit), icon: TrendingUp, tint: "success" as const },
-    { label: "Orders", value: String(orders.length), icon: Receipt, tint: "neutral" as const },
-    { label: "Cash Orders", value: String(cashOrders), icon: Wallet, tint: "neutral" as const },
+    { label: "Orders", value: String(totalOrders), icon: Receipt, tint: "neutral" as const },
+    {
+      label: "Cash Orders",
+      value: String(cashOrders),
+      hint: totalOrders > 0 ? `${cashPct}% of orders` : undefined,
+      icon: Wallet,
+      tint: "neutral" as const,
+    },
+    {
+      label: "UPI Orders",
+      value: String(upiOrders),
+      hint: totalOrders > 0 ? `${upiPct}% of orders` : undefined,
+      icon: Smartphone,
+      tint: "primary" as const,
+    },
   ];
 
   return (
@@ -37,7 +54,7 @@ function ReportsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Reports</h1>
         </header>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
@@ -63,6 +80,9 @@ function ReportsPage() {
               <p className="mt-1 text-2xl font-bold tracking-tight text-foreground tabular">
                 {s.value}
               </p>
+              {s.hint && (
+                <p className="mt-1 text-xs font-medium text-text-secondary tabular">{s.hint}</p>
+              )}
             </motion.div>
           ))}
         </div>

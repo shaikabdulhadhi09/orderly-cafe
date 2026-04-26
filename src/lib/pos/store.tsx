@@ -26,7 +26,16 @@ type Ctx = {
   decrement: (id: string) => void;
   remove: (id: string) => void;
   clear: () => void;
-  placeOrder: (o: Omit<Order, "id" | "createdAt" | "items" | "totalAmount" | "profit">) => Order;
+  /**
+   * Build a temporary order from the current cart WITHOUT saving it.
+   * Caller is responsible for calling commitOrder to persist it.
+   */
+  buildTempOrder: (o: Omit<Order, "id" | "createdAt" | "items" | "totalAmount" | "profit">) => Order;
+  /**
+   * Persist a previously-built temp order: append to orders list and clear cart.
+   * Idempotent — passing the same order id twice is a no-op.
+   */
+  commitOrder: (order: Order) => void;
   addMenuItem: (data: Omit<MenuItem, "id">) => MenuItem;
   updateMenuItem: (id: string, data: Omit<MenuItem, "id">) => void;
   deleteMenuItem: (id: string) => void;
@@ -90,7 +99,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
   );
   const itemCount = useMemo(() => cart.reduce((s, l) => s + l.quantity, 0), [cart]);
 
-  const placeOrder = useCallback<Ctx["placeOrder"]>(
+  const buildTempOrder = useCallback<Ctx["buildTempOrder"]>(
     (o) => {
       const order: Order = {
         id: `ORD-${Date.now().toString(36).toUpperCase()}`,
@@ -100,12 +109,15 @@ export function PosProvider({ children }: { children: ReactNode }) {
         createdAt: Date.now(),
         ...o,
       };
-      setOrders((prev) => [order, ...prev]);
-      setCart([]);
       return order;
     },
     [cart, total, profit],
   );
+
+  const commitOrder = useCallback<Ctx["commitOrder"]>((order) => {
+    setOrders((prev) => (prev.some((o) => o.id === order.id) ? prev : [order, ...prev]));
+    setCart([]);
+  }, []);
 
   const value: Ctx = {
     cart,
@@ -119,7 +131,8 @@ export function PosProvider({ children }: { children: ReactNode }) {
     decrement,
     remove,
     clear,
-    placeOrder,
+    buildTempOrder,
+    commitOrder,
     addMenuItem,
     updateMenuItem,
     deleteMenuItem,
