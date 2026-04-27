@@ -317,9 +317,9 @@ export function CartPanel() {
               animate={{ opacity: 1, y: 0, height: "auto", marginTop: 8 }}
               exit={{ opacity: 0, y: -4, height: 0, marginTop: 0 }}
               transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
-              className="flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-border bg-surface text-sm font-semibold text-foreground shadow-[var(--shadow-soft-sm)] transition-colors hover:bg-surface-alt disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary text-base font-bold text-primary-foreground shadow-[var(--shadow-soft-md)] transition-all duration-200 ease-[var(--ease-settle)] hover:bg-accent active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-text-secondary disabled:shadow-none"
             >
-              <Printer className="h-4 w-4" />
+              <Printer className="h-5 w-5" />
               {printed ? "Printing…" : `Print Bill — ${tempOrder.id}`}
             </motion.button>
           )}
