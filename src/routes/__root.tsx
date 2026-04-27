@@ -35,10 +35,14 @@ export const Route = createRootRoute({
       { name: "description", content: "A calm, fast, touchscreen-first POS for fast-food restaurants. Take orders, accept cash or UPI, and track sales effortlessly." },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Crave POS — Modern Fast-Food Point of Sale" },
-      { property: "og:description", content: "A calm, fast, touchscreen-first POS for fast-food restaurants." },
+      { property: "og:description", content: "A calm, fast, touchscreen-first POS for fast-food restaurants. Take orders, accept cash or UPI, and track sales effortlessly." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Crave POS — Modern Fast-Food Point of Sale" },
+      { name: "twitter:description", content: "A calm, fast, touchscreen-first POS for fast-food restaurants. Take orders, accept cash or UPI, and track sales effortlessly." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f7dfe7a3-2292-4c3f-b5bb-80efb084d0d2/id-preview-552bf2d7--b492aeac-7433-4e9f-837e-7863691ba016.lovable.app-1777281939351.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f7dfe7a3-2292-4c3f-b5bb-80efb084d0d2/id-preview-552bf2d7--b492aeac-7433-4e9f-837e-7863691ba016.lovable.app-1777281939351.png" },
     ],
     links: [
       {
