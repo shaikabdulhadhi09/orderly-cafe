@@ -47,6 +47,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>(DEFAULT_MENU);
+  const [nextOrderNumber, setNextOrderNumber] = useState(1);
 
   const addItem = useCallback((item: MenuItem) => {
     setCart((c) => {
@@ -102,7 +103,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
   const buildTempOrder = useCallback<Ctx["buildTempOrder"]>(
     (o) => {
       const order: Order = {
-        id: `ORD-${Date.now().toString(36).toUpperCase()}`,
+        id: `ORD-${String(nextOrderNumber).padStart(4, "0")}`,
         items: cart,
         totalAmount: total,
         profit,
@@ -111,11 +112,15 @@ export function PosProvider({ children }: { children: ReactNode }) {
       };
       return order;
     },
-    [cart, total, profit],
+    [cart, total, profit, nextOrderNumber],
   );
 
   const commitOrder = useCallback<Ctx["commitOrder"]>((order) => {
-    setOrders((prev) => (prev.some((o) => o.id === order.id) ? prev : [order, ...prev]));
+    setOrders((prev) => {
+      if (prev.some((o) => o.id === order.id)) return prev;
+      return [order, ...prev];
+    });
+    setNextOrderNumber((n) => n + 1);
     setCart([]);
   }, []);
 
